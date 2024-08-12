@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3 uid="uid://cvur2ptq4kptw"]
+
+[ext_resource type="Script" path="res://scenes/tile_placer.gd" id="1_15rc1"]
+[ext_resource type="Texture2D" uid="uid://2ro0p8765ju2" path="res://assets/tiles/tiles.png" id="2_2vhoy"]
+
+[node name="TilePlacer" type="Node2D"]
+script = ExtResource("1_15rc1")
+no_action_color = Color(0.122252, 0.122252, 0.122252, 0.164706)
+move_to_color = Color(1, 1, 1, 0.380392)
+discover_color = Color(0.179818, 0.97142, 0.537947, 0.384314)
+illegal_placement_color = Color(0.807843, 0, 0, 0.490196)
+
+[node name="Preview" type="Node2D" parent="."]
+
+[node name="TilePreview" type="Sprite2D" parent="Preview"]
+unique_name_in_owner = true
+visible = false
+modulate = Color(1, 1, 1, 0.584314)
+texture = ExtResource("2_2vhoy")
+region_enabled = true
+region_rect = Rect2(0, 0, 512, 512)
+
+[node name="Highlighter" type="ColorRect" parent="Preview"]
+unique_name_in_owner = true
+offset_left = -256.0
+offset_top = -256.0
+offset_right = 256.0
+offset_bottom = 256.0
+color = Color(1, 1, 1, 0)

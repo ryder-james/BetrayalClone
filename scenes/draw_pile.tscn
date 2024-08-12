@@ -1,0 +1,116 @@
+[gd_scene load_steps=7 format=3 uid="uid://d1rn5lu0wws6y"]
+
+[ext_resource type="Script" path="res://scenes/draw_pile.gd" id="1_63ga3"]
+[ext_resource type="Texture2D" uid="uid://cn0ygluw00kfp" path="res://assets/tiles/tile_backs.png" id="1_i7i1u"]
+
+[sub_resource type="Gradient" id="Gradient_vesjp"]
+offsets = PackedFloat32Array(0, 0.961538, 1)
+colors = PackedColorArray(0.376471, 0.376471, 0.376471, 1, 0.376471, 0.376471, 0.376471, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_x075l"]
+gradient = SubResource("Gradient_vesjp")
+fill = 2
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_wi1gd"]
+offsets = PackedFloat32Array(0, 0.961538, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_mt7l5"]
+gradient = SubResource("Gradient_wi1gd")
+fill = 2
+fill_from = Vector2(0.5, 0.5)
+
+[node name="DrawPile" type="Node2D"]
+script = ExtResource("1_63ga3")
+
+[node name="Discard" type="Node2D" parent="."]
+position = Vector2(0, -675)
+
+[node name="DiscardBorder" type="Sprite2D" parent="Discard"]
+scale = Vector2(8.5, 8.5)
+texture = SubResource("GradientTexture2D_x075l")
+
+[node name="DiscardBack" type="Sprite2D" parent="Discard"]
+unique_name_in_owner = true
+region_rect = Rect2(0, 0, 512, 512)
+
+[node name="DiscardCount" type="Label" parent="Discard"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -250.0
+offset_right = 250.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "0"
+vertical_alignment = 2
+
+[node name="Label" type="Label" parent="Discard"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -256.0
+offset_top = 280.0
+offset_right = 256.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "Discard Pile"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Draw" type="Node2D" parent="."]
+
+[node name="DrawBorder" type="Sprite2D" parent="Draw"]
+scale = Vector2(8.5, 8.5)
+texture = SubResource("GradientTexture2D_mt7l5")
+
+[node name="DrawBack" type="Sprite2D" parent="Draw"]
+unique_name_in_owner = true
+texture = ExtResource("1_i7i1u")
+region_enabled = true
+region_rect = Rect2(0, 0, 512, 512)
+
+[node name="DrawCount" type="Label" parent="Draw"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -250.0
+offset_right = 250.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "0"
+vertical_alignment = 2
+
+[node name="Label" type="Label" parent="Draw"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -256.0
+offset_top = 280.0
+offset_right = 256.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "Draw Pile"
+horizontal_alignment = 1
+vertical_alignment = 1

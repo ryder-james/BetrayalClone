@@ -13,7 +13,11 @@ func _ready() -> void:
 	set_zoom_level(zoom_level)
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event):
+	if event.is_action_pressed("zoom_in"):
+		set_zoom_level(zoom_level + zoom_factor)
+	elif event.is_action_pressed("zoom_out"):
+		set_zoom_level(zoom_level - zoom_factor)
 	if event.is_action_pressed("camera_drag"):
 		position_before_drag = event.global_position
 		position_before_drag2 = self.global_position
@@ -31,13 +35,6 @@ func _input(event: InputEvent) -> void:
 	
 	if position_before_drag and event is InputEventMouseMotion:
 		self.global_position = position_before_drag2 + (position_before_drag - event.global_position) * (1/zoom_level)
-
-
-func _unhandled_input(event):
-	if event.is_action_pressed("zoom_in"):
-		set_zoom_level(zoom_level + zoom_factor)
-	elif event.is_action_pressed("zoom_out"):
-		set_zoom_level(zoom_level - zoom_factor)
 
 
 func set_zoom_level(level: float, mouse_world_position = self.get_global_mouse_position()):

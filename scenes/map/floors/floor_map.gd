@@ -1,14 +1,12 @@
 class_name FloorMap
 extends TileMap
 
-const TILE_SIZE = 512
-const TILES_SOURCE_ID := 0
-const FOYER_SOURCE_ID := 1
 const ROTATION_90 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H
 const ROTATION_180 := TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
 const ROTATION_270 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V
 
 @export_enum("Basement:1", "Ground:2", "Upper:4", "Roof:8") var map_floor: int
+
 var _map = {}
 
 

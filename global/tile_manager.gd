@@ -1,6 +1,7 @@
 extends Node
 # Autoload as TileManager
 
+const TILE_SIZE = 512
 const TILES = preload("res://scenes/map/tiles.tres") as TileSet
 const TILE_SOURCE_ID = 0
 const FOYER_SOURCE_ID = 1

@@ -40,7 +40,7 @@ func _ready() -> void:
 	_update_highlighter()
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	match tile_mode:
 		TileMode.SELECT:
 			_process_input_select(event)
@@ -59,8 +59,6 @@ func _process_input_select(event: InputEvent) -> void:
 			_switch_mode(TileMode.DISCOVER)
 		elif active_tile_id != DrawPile.NO_TILE:
 			Event.on_target_updated.emit(active_tile_coords)
-	elif event.is_action_pressed("secondary"):
-		_update_highlighter()
 	elif event is InputEventMouseMotion:
 		prev_tile_coords = active_tile_coords
 		active_tile_coords = map.get_tile_coords(get_global_mouse_position())

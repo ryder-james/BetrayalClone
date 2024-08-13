@@ -6,24 +6,40 @@ var _speed := 3.5
 var _path = []
 var _next_point: Vector2
 var _current_point: Vector2
+var _path_line: Line2D
+var _is_traveling := false
+
 
 func _ready() -> void:
 	Event.on_target_updated.connect(_on_target_updated)
+	_path_line = get_tree().get_first_node_in_group("path_line") as Line2D
+	pass
 
 
 func _process(delta: float) -> void:
-	if not _next_point and _path.size() > 0:
+	if not _is_traveling and _path.size() > 0:
+		_is_traveling = true
 		_next_point = map.get_tile_position_from_coords(_path.pop_front())
 	
-	if _next_point:
+	if _is_traveling:
+		draw_path(_path)
 		global_position = global_position.lerp(_next_point, delta * _speed)
-	
-	if (_next_point - global_position).length_squared() <= 750.0:
-		_current_point = _next_point
-		_next_point = Vector2.ZERO
-		if _path.size() == 0:
-			print("done")
-	
+		if (_next_point - global_position).length_squared() <= 750.0:
+			_is_traveling = false
+			_current_point = _next_point
+			_next_point = Vector2.ZERO
+			if _path.size() == 0:
+				_path_line.clear_points()
+				global_position = _current_point
+
+
+func draw_path(path: Array) -> void:
+	_path_line.clear_points()
+	_path_line.add_point(global_position)
+	_path_line.add_point(_next_point)
+	for point in path:
+		_path_line.add_point(map.get_tile_position_from_coords(point))
+
 
 
 func _on_target_updated(new_target: Vector2i) -> void:

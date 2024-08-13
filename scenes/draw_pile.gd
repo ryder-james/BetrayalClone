@@ -45,6 +45,14 @@ func discard() -> void:
 	_update()
 
 
+func refill() -> void:
+	_reshuffle_discard_pile()
+
+
+func is_empty() -> bool:
+	return _draw_pile.size() == 0
+
+
 func _update() -> void:
 	# Update textures
 	draw_back.texture = _get_back(peek())

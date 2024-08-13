@@ -106,6 +106,8 @@ func _switch_mode(new_mode: TileMode) -> void:
 
 func _place_tile() -> void:
 	map.place_tile(active_tile_coords, active_tile_id, placement_rotations)
+	if draw_pile.is_empty():
+		draw_pile.refill()
 
 
 func _update_highlighter() -> void:

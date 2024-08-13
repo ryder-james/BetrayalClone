@@ -5,6 +5,7 @@ extends Node2D
 
 var _speed := 3.5
 var _path = []
+var _target_queue: Array
 var _next_point: Vector2
 var _current_point: Vector2
 var _path_line: Line2D
@@ -14,10 +15,12 @@ var _is_traveling := false
 func _ready() -> void:
 	Event.on_target_updated.connect(_on_target_updated)
 	_path_line = get_tree().get_first_node_in_group("path_line") as Line2D
-	pass
 
 
 func _process(delta: float) -> void:
+	if _path.size() == 0 and _target_queue.size() > 0:
+		_path = calculate_path(_target_queue.pop_back())
+
 	if not _is_traveling and _path.size() > 0:
 		_is_traveling = true
 		_next_point = map.get_tile_position_from_coords(_path.pop_front())
@@ -137,5 +140,6 @@ func calculate_path(target: Vector2i) -> Array:
 	
 	return [start]
 
+
 func _on_target_updated(new_target: Vector2i) -> void:
-	_path = calculate_path(new_target)	
+	_target_queue.push_front(new_target)

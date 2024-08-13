@@ -106,6 +106,10 @@ func _switch_mode(new_mode: TileMode) -> void:
 			
 			_update_discover_visual()
 
+			if legal_rotations.size() == 1:
+				_place_tile()
+				_switch_mode(TileMode.SELECT)
+
 
 func _place_tile() -> void:
 	map.place_tile(active_tile_coords, active_tile_id, placement_rotations)

@@ -28,7 +28,7 @@ func get_tile_info(tile_position: Vector2i) -> Dictionary:
 	return {}
 
 
-func get_legal_rotations(tile_position: Vector2i, tile_info: Dictionary) -> Array:
+func get_legal_rotations(tile_position: Vector2i, tile_info: Dictionary, origin_direction: int) -> Array:
 	# Prioritize first connecting to at least the door we started from,
 	#   then to maximizing remaining open doors.
 	
@@ -42,7 +42,8 @@ func get_legal_rotations(tile_position: Vector2i, tile_info: Dictionary) -> Arra
 			Map.DoorLegality.LEGAL:
 				var unblocked = get_unblocked_doors(tile_position, tile_info.doors,
 						rotation_count)
-				door_rotations[rotation_count] = unblocked
+				if has_door_facing(tile_info, origin_direction, rotation_count):
+					door_rotations[rotation_count] = unblocked
 				if unblocked > best:
 					best = unblocked
 	
@@ -152,8 +153,11 @@ func get_unblocked_doors(tile_position: Vector2i, doors: int, rotation_count := 
 	return unblocked_count
 
 
-func has_door_facing(tile_info: Dictionary, direction: int) -> bool:
-	return tile_info.doors & direction == direction
+func has_door_facing(tile_info: Dictionary, direction: int, rotations := 0) -> bool:
+	var rotated_doors = tile_info.doors
+	for n in rotations:
+		rotated_doors = Direction.rotate_c(rotated_doors)
+	return rotated_doors & direction == direction
 
 
 func get_neighbors(map_coords: Vector2i, include_empty := true) -> Dictionary:

@@ -98,7 +98,10 @@ func _switch_mode(new_mode: TileMode) -> void:
 			tile_preview.visible = true
 			tile_preview.texture = TileManager.get_tile_texture(active_tile_id)
 			
-			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id)
+			var path = explorer.calculate_path(active_tile_coords)
+			var entering_direction = Direction.get_direction(path[-2], active_tile_coords)
+
+			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id, entering_direction)
 			placement_rotations = legal_rotations[0]
 			
 			_update_discover_visual()
@@ -125,23 +128,17 @@ func _update_highlighter() -> void:
 			highlighter.color = move_to_color
 			if prev_tile_coords != active_tile_coords:
 				var path = explorer.calculate_path(active_tile_coords)
-				print("update path")
-				print(path)
 				explorer.draw_path(path)
 		TileAction.WRONG_FLOOR:
 			highlighter.color = discover_color
 			if prev_tile_coords != active_tile_coords:
 				var path = explorer.calculate_path(active_tile_coords)
-				print("update path")
-				print(path)
 				explorer.draw_path(path)
 			can_place = true
 		TileAction.DISCOVER:
 			highlighter.color = discover_color
 			if prev_tile_coords != active_tile_coords:
 				var path = explorer.calculate_path(active_tile_coords)
-				print("update path")
-				print(path)
 				explorer.draw_path(path)
 			can_place = true
 

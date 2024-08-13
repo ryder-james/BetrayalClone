@@ -57,8 +57,8 @@ func get_door_legality(tile_position: Vector2i, tile_id: Vector2i, rotations := 
 	return active_floor_map.get_door_legality(tile_position, tile_info.doors, rotations)
 
 
-func get_legal_rotations(tile_position: Vector2i, tile_id: Vector2i) -> Array:
+func get_legal_rotations(tile_position: Vector2i, tile_id: Vector2i, origin_direction: int) -> Array:
 	var tile_info = TileManager.get_tile_info(tile_id)
 	if not tile_info:
 		return []
-	return active_floor_map.get_legal_rotations(tile_position, tile_info)
+	return active_floor_map.get_legal_rotations(tile_position, tile_info, origin_direction)

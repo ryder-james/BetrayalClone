@@ -39,8 +39,8 @@ func draw_path(path: Array) -> void:
 		return
 	
 	_path_line.clear_points()
-	_path_line.add_point(global_position)
 	if _is_traveling:
+		_path_line.add_point(global_position)
 		_path_line.add_point(_next_point)
 	for point in path:
 		_path_line.add_point(map.get_tile_position_from_coords(point))

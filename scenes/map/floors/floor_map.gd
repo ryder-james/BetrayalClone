@@ -10,15 +10,14 @@ const ROTATION_270 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSourc
 
 @export_enum("Basement:1", "Ground:2", "Upper:4", "Roof:8") var map_floor: int
 var _map = {}
-var _top_left_tile_coords: Vector2i
-var _bot_right_tile_coords: Vector2i
 
 
 func _ready() -> void:
-	# Register Foyer tile
-	place_tile(Vector2i.ZERO, TileManager.get_tile_info_from_name("Entrance Hall"))
-	place_tile(Vector2i(-1, 0), TileManager.get_tile_info_from_name("Foyer"))
-	place_tile(Vector2i(-2, 0), TileManager.get_tile_info_from_name("Grand Staircase"))
+	_place_landing()
+
+
+func _place_landing() -> void:
+	pass
 
 
 func get_tile_info(tile_position: Vector2i) -> Dictionary:
@@ -78,24 +77,10 @@ func place_tile(tile_position: Vector2i, tile_info: Dictionary, rotations := 0) 
 	elif rotations == 3:
 		rotation_flags = ROTATION_270
 	
-	if (tile_position.x < _top_left_tile_coords.x 
-			or tile_position.y < _top_left_tile_coords.y):
-		var min_x = min(tile_position.x, _top_left_tile_coords.x)
-		var min_y = min(tile_position.y, _top_left_tile_coords.y)
-		_top_left_tile_coords = Vector2i(min_x, min_y)
-	if (tile_position.x > _bot_right_tile_coords.x 
-			or tile_position.y > _bot_right_tile_coords.y):
-		var max_x = max(tile_position.x, _bot_right_tile_coords.x)
-		var max_y = max(tile_position.y, _bot_right_tile_coords.y)
-		_bot_right_tile_coords = Vector2i(max_x, max_y)
-	
 	set_cell(0, tile_position, tile_info.source, tile_info.id, rotation_flags)
 
 
 func get_door_legality(tile_position: Vector2i, doors: int, rotations := 0) -> Map.DoorLegality:
-	if tile_position == Vector2i(1, 0):
-		return Map.DoorLegality.ILLEGAL
-	
 	for rot_count in rotations:
 		doors = Direction.rotate_c(doors)
 	

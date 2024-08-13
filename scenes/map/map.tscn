@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/map/map.gd" id="1_oru6m"]
 [ext_resource type="TileSet" uid="uid://bleoomwkd36ey" path="res://scenes/map/tiles.tres" id="2_2y7do"]
-[ext_resource type="Script" path="res://scenes/map/floors/floor_map.gd" id="3_3ogao"]
+[ext_resource type="Script" path="res://scenes/map/floors/ground_floor_map.gd" id="3_6l03w"]
 [ext_resource type="Texture2D" uid="uid://ekyqhkxp4t6" path="res://assets/tiles/tile_foyer.png" id="4_cr6kk"]
 
 [node name="Map" type="Node2D"]
@@ -13,7 +13,7 @@ unique_name_in_owner = true
 tile_set = ExtResource("2_2y7do")
 format = 2
 layer_0/tile_data = PackedInt32Array(65534, 1, 0, 65535, 65537, 0, 0, 131073, 0)
-script = ExtResource("3_3ogao")
+script = ExtResource("3_6l03w")
 
 [node name="Sprite2D" type="Sprite2D" parent="GroundFloor"]
 position = Vector2(550, 256)

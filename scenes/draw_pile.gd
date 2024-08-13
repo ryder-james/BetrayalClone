@@ -2,7 +2,7 @@ class_name DrawPile
 extends Node2D
 
 const TILE_COUNT = 61
-const TILES = preload("res://scenes/tiles.tres") as TileSet
+const TILES = preload("res://scenes/map/tiles.tres") as TileSet
 const BACKS_SOURCE_ID = 2
 const NO_TILE = -Vector2i.ONE
 

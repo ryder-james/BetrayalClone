@@ -1,7 +1,7 @@
 extends Node
 # Autoload as TileManager
 
-const TILES = preload("res://scenes/tiles.tres") as TileSet
+const TILES = preload("res://scenes/map/tiles.tres") as TileSet
 const TILE_SOURCE_ID = 0
 const FOYER_SOURCE_ID = 1
 const DOOR_BIT := 0

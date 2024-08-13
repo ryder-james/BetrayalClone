@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://cwgrqossjugrq"]
 
-[ext_resource type="PackedScene" uid="uid://b3li0n2vtf1h" path="res://scenes/map.tscn" id="1_p66a0"]
+[ext_resource type="PackedScene" uid="uid://b3li0n2vtf1h" path="res://scenes/map/map.tscn" id="1_p66a0"]
 [ext_resource type="Script" path="res://scenes/cam_move.gd" id="2_iaini"]
 [ext_resource type="PackedScene" uid="uid://d1rn5lu0wws6y" path="res://scenes/draw_pile.tscn" id="3_c0vcs"]
-[ext_resource type="PackedScene" uid="uid://cvur2ptq4kptw" path="res://scenes/tile_placer.tscn" id="3_vnuq4"]
-[ext_resource type="PackedScene" uid="uid://c1lowmu6vy8k7" path="res://scenes/explorer.tscn" id="5_rd0s1"]
+[ext_resource type="PackedScene" uid="uid://cvur2ptq4kptw" path="res://scenes/map/tile_placer.tscn" id="3_vnuq4"]
+[ext_resource type="PackedScene" uid="uid://c1lowmu6vy8k7" path="res://scenes/explorer/explorer.tscn" id="5_rd0s1"]
 
 [node name="Game" type="Node2D"]
 

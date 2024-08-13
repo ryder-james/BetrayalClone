@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cvur2ptq4kptw"]
 
-[ext_resource type="Script" path="res://scenes/tile_placer.gd" id="1_15rc1"]
+[ext_resource type="Script" path="res://scenes/map/tile_placer.gd" id="1_15rc1"]
 [ext_resource type="Texture2D" uid="uid://2ro0p8765ju2" path="res://assets/tiles/tiles.png" id="2_2vhoy"]
 
 [node name="TilePlacer" type="Node2D"]

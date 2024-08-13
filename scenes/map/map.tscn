@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://b3li0n2vtf1h"]
 
-[ext_resource type="Script" path="res://scenes/map.gd" id="1_oru6m"]
-[ext_resource type="TileSet" uid="uid://bleoomwkd36ey" path="res://scenes/tiles.tres" id="2_2y7do"]
-[ext_resource type="Script" path="res://scenes/floor_map.gd" id="3_3ogao"]
+[ext_resource type="Script" path="res://scenes/map/map.gd" id="1_oru6m"]
+[ext_resource type="TileSet" uid="uid://bleoomwkd36ey" path="res://scenes/map/tiles.tres" id="2_2y7do"]
+[ext_resource type="Script" path="res://scenes/map/floors/floor_map.gd" id="3_3ogao"]
 [ext_resource type="Texture2D" uid="uid://ekyqhkxp4t6" path="res://assets/tiles/tile_foyer.png" id="4_cr6kk"]
 
 [node name="Map" type="Node2D"]

@@ -32,3 +32,16 @@ func right(direction: int) -> int:
 
 func left(direction: int) -> int:
 	return rotate_cc(direction)
+
+
+func as_vector(direction: int) -> Vector2i:
+	var dir_vector = Vector2i.ZERO
+	if direction & UP == UP:
+		dir_vector += Vector2i.UP
+	if direction & DOWN == DOWN:
+		dir_vector += Vector2i.DOWN
+	if direction & RIGHT == RIGHT:
+		dir_vector += Vector2i.RIGHT
+	if direction & LEFT == LEFT:
+		dir_vector += Vector2i.LEFT
+	return dir_vector

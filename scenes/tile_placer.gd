@@ -14,6 +14,7 @@ enum TileMode {
 
 @export var draw_pile: DrawPile
 @export var map: Map
+@export var explorer: Explorer
 @export_group("Highlighter Colors")
 @export var no_action_color: Color = Color.TRANSPARENT
 @export var move_to_color: Color = Color(0xffffff96)
@@ -22,6 +23,7 @@ enum TileMode {
 
 var current_floor := Map.GROUND
 var can_place := false
+var prev_tile_coords: Vector2i
 var active_tile_coords: Vector2i
 var active_tile_id: Vector2i
 var legal_rotations = []
@@ -60,6 +62,7 @@ func _process_input_select(event: InputEvent) -> void:
 	elif event.is_action_pressed("secondary"):
 		_update_highlighter()
 	elif event is InputEventMouseMotion:
+		prev_tile_coords = active_tile_coords
 		active_tile_coords = map.get_tile_coords(get_global_mouse_position())
 		var active_tile = map.get_tile_info(active_tile_coords)
 		if active_tile:
@@ -85,7 +88,7 @@ func _switch_mode(new_mode: TileMode) -> void:
 	match tile_mode:
 		TileMode.SELECT:
 			active_tile_coords = map.get_tile_coords(get_global_mouse_position())
-			
+
 			highlighter.visible = true
 			tile_preview.visible = false
 			
@@ -115,13 +118,29 @@ func _update_highlighter() -> void:
 	match tile_action:
 		TileAction.NONE:
 			highlighter.color = no_action_color
+			explorer.hide_path()
 		TileAction.MOVE_TO:
 			highlighter.color = move_to_color
+			if prev_tile_coords != active_tile_coords:
+				var path = explorer.calculate_path(active_tile_coords)
+				print("update path")
+				print(path)
+				explorer.draw_path(path)
 		TileAction.WRONG_FLOOR:
 			highlighter.color = discover_color
+			if prev_tile_coords != active_tile_coords:
+				var path = explorer.calculate_path(active_tile_coords)
+				print("update path")
+				print(path)
+				explorer.draw_path(path)
 			can_place = true
 		TileAction.DISCOVER:
 			highlighter.color = discover_color
+			if prev_tile_coords != active_tile_coords:
+				var path = explorer.calculate_path(active_tile_coords)
+				print("update path")
+				print(path)
+				explorer.draw_path(path)
 			can_place = true
 
 

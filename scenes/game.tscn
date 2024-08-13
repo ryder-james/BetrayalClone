@@ -17,9 +17,10 @@ max_zoom = 1.2
 
 [node name="Map" parent="." instance=ExtResource("1_p66a0")]
 
-[node name="TilePlacer" parent="." node_paths=PackedStringArray("draw_pile", "map") instance=ExtResource("3_vnuq4")]
+[node name="TilePlacer" parent="." node_paths=PackedStringArray("draw_pile", "map", "explorer") instance=ExtResource("3_vnuq4")]
 draw_pile = NodePath("../ScreenSpaceTextures/DrawPile")
 map = NodePath("../Map")
+explorer = NodePath("../Explorer")
 
 [node name="ScreenSpaceTextures" type="CanvasLayer" parent="."]
 

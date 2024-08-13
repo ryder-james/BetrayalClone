@@ -1,3 +1,4 @@
+class_name Explorer
 extends Node2D
 
 @export var map: Map
@@ -34,15 +35,23 @@ func _process(delta: float) -> void:
 
 
 func draw_path(path: Array) -> void:
+	if not _path_line:
+		return
+	
 	_path_line.clear_points()
 	_path_line.add_point(global_position)
-	_path_line.add_point(_next_point)
+	if _is_traveling:
+		_path_line.add_point(_next_point)
 	for point in path:
 		_path_line.add_point(map.get_tile_position_from_coords(point))
 
 
+func hide_path() -> void:
+	if _path_line:
+		_path_line.clear_points()
 
-func _on_target_updated(new_target: Vector2i) -> void:
+
+func calculate_path(target: Vector2i) -> Array:
 	var start: Vector2i = map.get_tile_coords(global_position)
 	
 	var open = {}
@@ -56,7 +65,7 @@ func _on_target_updated(new_target: Vector2i) -> void:
 		has_parent = false,
 		children = [],
 		g = 0,
-		h = (new_target - start).length_squared(),
+		h = (target - start).length_squared(),
 		f = 0,
 	}
 	
@@ -66,25 +75,26 @@ func _on_target_updated(new_target: Vector2i) -> void:
 		var current: Dictionary
 		for node in open.values():
 			if node.f < lowest_f:
+				lowest_f = node.f
 				current = node
 		open.erase(current.position)
 		closed[current.position] = current
 		
-		if current.position == new_target:
-			_path = []
+		if current.position == target:
+			var path = []
 			var path_point: Dictionary = current
 			while path_point:
-				_path.append(path_point.position)
+				path.append(path_point.position)
 				if path_point.has_parent:
 					path_point = closed[path_point.parent]
 				else:
 					path_point = {}
-			_path.reverse()
-			return
+			path.reverse()
+			return path
 		
-		var neighbors = map.get_neighbors(current.position, false)
+		var neighbors = map.get_neighbors(current.position)
 		for direction in neighbors:
-			var neighbor_position = neighbors[direction].tile_position			
+			var neighbor_position = current.position + Direction.as_vector(direction)			
 			if neighbor_position == current.position:
 				continue
 			
@@ -92,14 +102,17 @@ func _on_target_updated(new_target: Vector2i) -> void:
 			if current.doors & direction != direction:
 				continue
 			
-			# If they don't point at us, move on
-			var opp = Direction.opposite(direction)
-			if neighbors[direction].doors & opp != opp:
-				continue
+			# If there is a tile there, we need to see if they point at us
+			if neighbors[direction]:
+				# If they don't point at us, move on
+				var opp = Direction.opposite(direction)
+				if neighbors[direction].doors & opp != opp:
+					continue
 
+			var doors = neighbors[direction].doors if neighbors[direction] else Direction.opposite(direction)
 			var child = {
 				position = neighbor_position,
-				doors = neighbors[direction].doors,
+				doors = doors,
 				parent = current.position,
 				has_parent = true,
 				children = [],
@@ -113,7 +126,7 @@ func _on_target_updated(new_target: Vector2i) -> void:
 			
 			# TODO: Sub 1 for node weight (enemy team or w/e)
 			child.g = current.g + 1
-			child.h = (new_target - child.position).length_squared()
+			child.h = (target - child.position).length_squared()
 			child.f = child.g + child.h
 			
 			for node_pos in open:
@@ -122,4 +135,7 @@ func _on_target_updated(new_target: Vector2i) -> void:
 			
 			open[child.position] = child
 	
-	
+	return [start]
+
+func _on_target_updated(new_target: Vector2i) -> void:
+	_path = calculate_path(new_target)	

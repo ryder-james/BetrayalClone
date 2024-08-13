@@ -104,6 +104,8 @@ func _switch_mode(new_mode: TileMode) -> void:
 			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id, entering_direction)
 			placement_rotations = legal_rotations[0]
 			
+			Event.on_target_updated.emit(explorer.calculate_path(active_tile_coords)[-2])
+			
 			_update_discover_visual()
 
 

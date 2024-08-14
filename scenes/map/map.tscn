@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://b3li0n2vtf1h"]
+[gd_scene load_steps=7 format=3 uid="uid://b3li0n2vtf1h"]
 
 [ext_resource type="Script" path="res://scenes/map/map.gd" id="1_oru6m"]
 [ext_resource type="TileSet" uid="uid://bleoomwkd36ey" path="res://scenes/map/tiles.tres" id="2_2y7do"]
 [ext_resource type="Script" path="res://scenes/map/floors/floor_map.gd" id="3_3ogao"]
 [ext_resource type="Script" path="res://scenes/map/floors/ground_floor_map.gd" id="3_6l03w"]
 [ext_resource type="Texture2D" uid="uid://ekyqhkxp4t6" path="res://assets/tiles/tile_foyer.png" id="4_cr6kk"]
+[ext_resource type="PackedScene" uid="uid://c1lowmu6vy8k7" path="res://scenes/explorer/explorer.tscn" id="6_mc6bi"]
 
 [node name="Map" type="Node2D"]
 script = ExtResource("1_oru6m")
@@ -30,6 +31,10 @@ position = Vector2(550, 256)
 texture = ExtResource("4_cr6kk")
 region_enabled = true
 region_rect = Rect2(1536, 0, 77, 512)
+
+[node name="Explorer" parent="GroundFloor" node_paths=PackedStringArray("map") groups=["explorer"] instance=ExtResource("6_mc6bi")]
+position = Vector2(256, 256)
+map = NodePath("../..")
 
 [node name="UpperFloor" type="TileMap" parent="."]
 unique_name_in_owner = true

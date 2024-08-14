@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://cwgrqossjugrq"]
+[gd_scene load_steps=5 format=3 uid="uid://cwgrqossjugrq"]
 
 [ext_resource type="PackedScene" uid="uid://b3li0n2vtf1h" path="res://scenes/map/map.tscn" id="1_p66a0"]
 [ext_resource type="Script" path="res://scenes/cam_move.gd" id="2_iaini"]
 [ext_resource type="PackedScene" uid="uid://d1rn5lu0wws6y" path="res://scenes/draw_pile.tscn" id="3_c0vcs"]
 [ext_resource type="PackedScene" uid="uid://cvur2ptq4kptw" path="res://scenes/map/tile_placer.tscn" id="3_vnuq4"]
-[ext_resource type="PackedScene" uid="uid://c1lowmu6vy8k7" path="res://scenes/explorer/explorer.tscn" id="5_rd0s1"]
 
 [node name="Game" type="Node2D"]
 
@@ -17,20 +16,15 @@ max_zoom = 1.2
 
 [node name="Map" parent="." instance=ExtResource("1_p66a0")]
 
-[node name="TilePlacer" parent="." node_paths=PackedStringArray("draw_pile", "map", "explorer") instance=ExtResource("3_vnuq4")]
+[node name="TilePlacer" parent="." node_paths=PackedStringArray("draw_pile", "map") instance=ExtResource("3_vnuq4")]
 draw_pile = NodePath("../ScreenSpaceTextures/DrawPile")
 map = NodePath("../Map")
-explorer = NodePath("../Explorer")
 
 [node name="PathLine" type="Line2D" parent="." groups=["path_line"]]
 width = 30.0
 default_color = Color(0.14902, 0.321569, 0.207843, 1)
 begin_cap_mode = 2
 end_cap_mode = 2
-
-[node name="Explorer" parent="." node_paths=PackedStringArray("map") instance=ExtResource("5_rd0s1")]
-position = Vector2(256, 256)
-map = NodePath("../Map")
 
 [node name="ScreenSpaceTextures" type="CanvasLayer" parent="."]
 

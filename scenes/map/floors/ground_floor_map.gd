@@ -8,7 +8,7 @@ func get_door_legality(tile_position: Vector2i, doors: int, rotations := 0) -> M
 	return super.get_door_legality(tile_position, doors, rotations)
 
 
-func _place_landing() -> void:
+func place_landing() -> void:
 	# Register Foyer tile
 	place_tile(Vector2i.ZERO, TileManager.get_tile_info_from_name("Entrance Hall"))
 	place_tile(Vector2i(-1, 0), TileManager.get_tile_info_from_name("Foyer"))

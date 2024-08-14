@@ -1,20 +1,25 @@
 class_name FloorMap
 extends TileMap
 
+signal tile_placed(tile: Map.Tile)
+
 const ROTATION_90 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H
 const ROTATION_180 := TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
 const ROTATION_270 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V
 
 @export_enum("Basement:%s" % Map.BASEMENT, "Ground:%s" % Map.GROUND, "Upper:%s" % Map.UPPER, "Roof:%s" % Map.ROOF) var map_floor: int = Map.BASEMENT
 
+var explorers: Array[Explorer] = []
 var _map = {}
 
 
 func _ready() -> void:
-	_place_landing()
+	for node in get_tree().get_nodes_in_group("explorer"):
+		if get_children().has(node):
+			explorers.append(node as Explorer)
 
 
-func _place_landing() -> void:
+func place_landing() -> void:
 	# Register Landing tile
 	var landing_name = "%s Landing" % (
 			"Basement" if map_floor == Map.BASEMENT
@@ -67,6 +72,7 @@ func place_tile(tile_position: Vector2i, tile_info: TileInfo, rotations := 0) ->
 	map_tile.name = tile_info.name
 	map_tile.doors = rotated_doors
 	map_tile.position = tile_position
+	map_tile.map_floor = map_floor
 	map_tile.id = tile_info.id
 	map_tile.rotations = rotations
 	_map[tile_position] = map_tile
@@ -80,6 +86,7 @@ func place_tile(tile_position: Vector2i, tile_info: TileInfo, rotations := 0) ->
 		rotation_flags = ROTATION_270
 	
 	set_cell(0, tile_position, tile_info.source, tile_info.id, rotation_flags)
+	tile_placed.emit(map_tile)
 
 
 func get_door_legality(tile_position: Vector2i, doors: int, rotations := 0) -> Map.DoorLegality:
@@ -145,6 +152,13 @@ func has_door_facing(tile_info: TileInfo, direction: int, rotations := 0) -> boo
 	for n in rotations:
 		rotated_doors = Direction.rotate_c(rotated_doors)
 	return rotated_doors & direction == direction
+
+
+func get_linked_tiles(map_coords: Vector2i) -> Array[Dictionary]:
+	var tile = get_tile(map_coords)
+	if not tile:
+		return []
+	return TileManager.get_linked_tiles(get_tile(map_coords).name)
 
 
 func get_neighbors(map_coords: Vector2i, include_empty := true) -> Dictionary:

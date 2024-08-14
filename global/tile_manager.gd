@@ -40,8 +40,16 @@ func get_tile_info_from_name(tile_name: String) -> TileInfo:
 	return null
 
 
-func get_links(_tile_name: String) -> Dictionary:
-	return {}
+func get_linked_tiles(_tile_name: String) -> Array[Dictionary]:
+	var data = _get_tile_data_from_name(_tile_name)
+	var raw_links = data.get_custom_data("Links")
+	var linked_tiles: Array[Dictionary] = []
+	for link_name in raw_links.keys():
+		linked_tiles.append({
+			name = link_name,
+			weight = raw_links[link_name]
+		})
+	return linked_tiles
 
 
 func get_tile_info(tile_id: Vector2i) -> TileInfo:
@@ -57,7 +65,10 @@ func get_tile_texture(tile_id: Vector2i) -> Texture2D:
 
 func _get_tile_data_from_name(tile_name: String) -> TileData:
 	if _tile_name_cache.has(tile_name):
-		return _get_tile_data(_tile_name_cache[tile_name]).data
+		var internal_id = _tile_name_cache[tile_name]
+		var tile_id = Vector2i(internal_id.x, internal_id.y)
+		var source = internal_id.z
+		return _get_tile_data(tile_id, source).data
 
 	if (tile_name == "Entrance Hall"
 			or tile_name == "Foyer"

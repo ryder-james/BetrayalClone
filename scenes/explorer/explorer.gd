@@ -3,6 +3,7 @@ extends Node2D
 
 @export var map: Map
 
+var current_floor = Map.GROUND
 var _speed := 3.5
 var _path = []
 var _target_queue: Array
@@ -54,59 +55,55 @@ func hide_path() -> void:
 		_path_line.clear_points()
 
 
-func calculate_path(target: Vector2i, target_floor := -1) -> Array:
+func calculate_path(target: Vector2i, target_floor := -1) -> Array[Vector2i]:
 	var start: Vector2i = map.get_tile_coords(global_position)
-	var start_id := Vector3i(start.x, start.y, map.active_floor)
 	if target_floor < 0:
 		target_floor = map.active_floor
 
 	var target_id := Vector3i(target.x, target.y, target_floor)
 
-	var open = {}
-	var closed = {}
-	var all_nodes = {}
+	var open: Dictionary = {}
+	var closed: Dictionary = {}
+	var all_nodes: Dictionary = {}
 	
 	# Add the starting square (or node) to the open list
-	open[start_id] = {
-		id = start_id, # id - Vector3i(position.x, position.y, floor)
-		position = start, # Vector2i
-		floor = map.active_floor, # int
-		doors = map.get_tile(start).doors, # Direction
-		parent = Vector3i.ZERO, # id - Vector3i(parent.position.x, parent.position.y, parent.floor)
-		has_parent = false, # bool
-		children = [], # Array[id - Vector3i(child.position.x, child.position.y, child.floor)]
-		weight = 0, # int
-		heuristic = (target_id - start_id).length_squared(), # Distance from end
-		f = 0, # Sum of weight and heuristic
-	}
+	var first_node = PathNode.new()
+	first_node.position = start
+	first_node.map_floor = current_floor
+	first_node.doors = map.get_tile(start, current_floor).doors
+	first_node.has_parent = false
+	first_node.weight = 0
+	first_node.heuristic = (target_id - first_node.pos_id).length_squared()
+	first_node.f = 0
 
-	all_nodes[start_id] = open[start_id]
+	open[first_node.pos_id] = first_node
+	all_nodes[first_node.pos_id] = first_node
 	
 	while open.keys().size() > 0:
 		# Arbitrarily high number
 		var lowest_f := 60.0
-		var current: Dictionary
+		var current: PathNode
 		for node in open.values():
 			if node.f < lowest_f:
 				lowest_f = node.f
 				current = node
-		open.erase(current.id)
-		closed[current.id] = current
+		open.erase(current.pos_id)
+		closed[current.pos_id] = current
 		
-		if current.position == target and current.floor == target_floor:
-			var path = []
-			var path_point: Dictionary = current
+		if current.position == target and current.map_floor == target_floor:
+			var path: Array[Vector2i] = []
+			var path_point: PathNode = current
 			while path_point:
 				# TODO: This will be broken when moving between floors.
 				path.append(path_point.position)
 				if path_point.has_parent:
-					path_point = closed[path_point.parent]
+					path_point = closed[path_point.parent_id]
 				else:
-					path_point = {}
+					path_point = null
 			path.reverse()
 			return path
 		
-		var neighbors = map.get_neighbors(current.position, current.floor)
+		var neighbors = map.get_neighbors(current.position, current.map_floor)
 		for direction in neighbors:
 			var neighbor_position = current.position + Direction.as_vector(direction)			
 			if neighbor_position == current.position:
@@ -124,24 +121,29 @@ func calculate_path(target: Vector2i, target_floor := -1) -> Array:
 					continue
 
 			var doors = neighbors[direction].doors if neighbors[direction] else Direction.opposite(direction)
-			var child = {
-				id = Vector3i(neighbor_position.x, neighbor_position.y, current.floor),
-				position = neighbor_position,
-				floor = current.floor,
-				doors = doors,
-				parent = current.id,
-				has_parent = true,
-				children = [],
-			}
+			var child = PathNode.new()
+			child.position = neighbor_position
+			child.map_floor = current.map_floor
+			child.doors = doors
+			child.parent_id = current.pos_id
+			child.has_parent = true
 			
-			all_nodes[child.id] = child
-			current.children.append(child.id)
+			all_nodes[child.pos_id] = child
+			current.child_ids.append(child.pos_id)
 		
-		var special_connections = []#map.get_special_connections(current.position)
-		for special_connection in special_connections:
-			pass
+		var linked_tiles = map.get_linked_tiles(current.position, current.map_floor)
+		for link in linked_tiles:
+			var child = PathNode.new()
+			child.position = link.position
+			child.map_floor = link.floor
+			child.doors = link.doors
+			child.parent_id = current.pos_id
+			child.has_parent = true
+			
+			all_nodes[child.pos_id] = child
+			current.child_ids.append(child.pos_id)
 		
-		for child_id in current.children:
+		for child_id in current.child_ids:
 			if closed.has(child_id):
 				continue
 			
@@ -156,8 +158,26 @@ func calculate_path(target: Vector2i, target_floor := -1) -> Array:
 			
 			open[child_id] = all_nodes[child_id]
 	
-	return [start]
+	return [ first_node.position ]
 
 
 func _on_target_updated(new_target: Vector2i) -> void:
 	_target_queue.push_front(new_target)
+
+
+class PathNode:
+	var pos_id: Vector3i :
+		get:
+			return Vector3(position.x, position.y, map_floor)
+		set(value):
+			position = Vector2i(value.x, value.y)
+			map_floor = value.z
+	var position: Vector2i
+	var map_floor: int = Map.GROUND
+	var doors: int = Direction.NONE
+	var parent_id: Vector3i
+	var has_parent: bool = false
+	var child_ids: Array[Vector3i] = []
+	var weight: int
+	var heuristic: int
+	var f: int

@@ -19,7 +19,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 TileManager="*res://global/tile_manager.gd"
-Direction="*res://global/direction.gd"
 Event="*res://global/event.gd"
 
 [display]

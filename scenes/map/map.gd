@@ -64,8 +64,8 @@ func get_tile_coords(global_pos: Vector2) -> Vector2i:
 	return active_floor_map.local_to_map(local)
 
 
-func get_tile_info(map_coords: Vector2i) -> Dictionary:
-	return active_floor_map.get_tile_info(map_coords)
+func get_tile(map_coords: Vector2i) -> Tile:
+	return active_floor_map.get_tile(map_coords)
 
 
 func get_neighbors(map_coords: Vector2i, tile_floor := -1) -> Dictionary:
@@ -94,3 +94,11 @@ func get_legal_rotations(tile_position: Vector2i, tile_id: Vector2i, origin_dire
 	if not tile_info:
 		return []
 	return active_floor_map.get_legal_rotations(tile_position, tile_info, origin_direction)
+
+
+class Tile:
+	var name: String
+	var doors: int
+	var position: Vector2i
+	var id: Vector2i
+	var rotations: int

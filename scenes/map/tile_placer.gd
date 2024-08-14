@@ -62,7 +62,7 @@ func _process_input_select(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion:
 		prev_tile_coords = active_tile_coords
 		active_tile_coords = map.get_tile_coords(get_global_mouse_position())
-		var active_tile = map.get_tile_info(active_tile_coords)
+		var active_tile = map.get_tile(active_tile_coords)
 		if active_tile:
 			active_tile_id = active_tile.id
 		else:

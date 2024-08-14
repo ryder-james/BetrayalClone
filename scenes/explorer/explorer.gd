@@ -54,23 +54,33 @@ func hide_path() -> void:
 		_path_line.clear_points()
 
 
-func calculate_path(target: Vector2i) -> Array:
+func calculate_path(target: Vector2i, target_floor := -1) -> Array:
 	var start: Vector2i = map.get_tile_coords(global_position)
-	
+	var start_id := Vector3i(start.x, start.y, map.active_floor)
+	if target_floor < 0:
+		target_floor = map.active_floor
+
+	var target_id := Vector3i(target.x, target.y, target_floor)
+
 	var open = {}
 	var closed = {}
+	var all_nodes = {}
 	
 	# Add the starting square (or node) to the open list
-	open[start] = {
-		position = start,
-		doors = map.get_tile_info(start).doors,
-		parent = DrawPile.NO_TILE,
-		has_parent = false,
-		children = [],
-		g = 0,
-		h = (target - start).length_squared(),
-		f = 0,
+	open[start_id] = {
+		id = start_id, # id - Vector3i(position.x, position.y, floor)
+		position = start, # Vector2i
+		floor = map.active_floor, # int
+		doors = map.get_tile_info(start).doors, # Direction
+		parent = Vector3i.ZERO, # id - Vector3i(parent.position.x, parent.position.y, parent.floor)
+		has_parent = false, # bool
+		children = [], # Array[id - Vector3i(child.position.x, child.position.y, child.floor)]
+		weight = 0, # int
+		heuristic = (target_id - start_id).length_squared(), # Distance from end
+		f = 0, # Sum of weight and heuristic
 	}
+
+	all_nodes[start_id] = open[start_id]
 	
 	while open.keys().size() > 0:
 		# Arbitrarily high number
@@ -80,13 +90,14 @@ func calculate_path(target: Vector2i) -> Array:
 			if node.f < lowest_f:
 				lowest_f = node.f
 				current = node
-		open.erase(current.position)
-		closed[current.position] = current
+		open.erase(current.id)
+		closed[current.id] = current
 		
-		if current.position == target:
+		if current.position == target and current.floor == target_floor:
 			var path = []
 			var path_point: Dictionary = current
 			while path_point:
+				# TODO: This will be broken when moving between floors.
 				path.append(path_point.position)
 				if path_point.has_parent:
 					path_point = closed[path_point.parent]
@@ -95,7 +106,7 @@ func calculate_path(target: Vector2i) -> Array:
 			path.reverse()
 			return path
 		
-		var neighbors = map.get_neighbors(current.position)
+		var neighbors = map.get_neighbors(current.position, current.floor)
 		for direction in neighbors:
 			var neighbor_position = current.position + Direction.as_vector(direction)			
 			if neighbor_position == current.position:
@@ -114,29 +125,36 @@ func calculate_path(target: Vector2i) -> Array:
 
 			var doors = neighbors[direction].doors if neighbors[direction] else Direction.opposite(direction)
 			var child = {
+				id = Vector3i(neighbor_position.x, neighbor_position.y, current.floor),
 				position = neighbor_position,
+				floor = current.floor,
 				doors = doors,
-				parent = current.position,
+				parent = current.id,
 				has_parent = true,
 				children = [],
 			}
 			
-			current.children.append(child)
+			all_nodes[child.id] = child
+			current.children.append(child.id)
 		
-		for child in current.children:
-			if closed.has(child.position):
+		var special_connections = []#map.get_special_connections(current.position)
+		for special_connection in special_connections:
+			pass
+		
+		for child_id in current.children:
+			if closed.has(child_id):
 				continue
 			
 			# TODO: Sub 1 for node weight (enemy team or w/e)
-			child.g = current.g + 1
-			child.h = (target - child.position).length_squared()
-			child.f = child.g + child.h
+			all_nodes[child_id].weight = current.weight + 1
+			all_nodes[child_id].heuristic = (target_id - child_id).length_squared()
+			all_nodes[child_id].f = all_nodes[child_id].weight + all_nodes[child_id].heuristic
 			
-			for node_pos in open:
-				if child.position == node_pos and child.g > open[node_pos].g:
+			for node_id in open:
+				if child_id == node_id and all_nodes[child_id].weight > open[node_id].weight:
 					continue
 			
-			open[child.position] = child
+			open[child_id] = all_nodes[child_id]
 	
 	return [start]
 

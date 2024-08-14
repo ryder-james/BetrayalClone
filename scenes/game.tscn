@@ -22,12 +22,6 @@ draw_pile = NodePath("../ScreenSpaceTextures/DrawPile")
 map = NodePath("../Map")
 explorer = NodePath("../Explorer")
 
-[node name="ScreenSpaceTextures" type="CanvasLayer" parent="."]
-
-[node name="DrawPile" parent="ScreenSpaceTextures" instance=ExtResource("3_c0vcs")]
-position = Vector2(1177, 621)
-scale = Vector2(0.3, 0.3)
-
 [node name="PathLine" type="Line2D" parent="." groups=["path_line"]]
 width = 30.0
 default_color = Color(0.14902, 0.321569, 0.207843, 1)
@@ -37,3 +31,33 @@ end_cap_mode = 2
 [node name="Explorer" parent="." node_paths=PackedStringArray("map") instance=ExtResource("5_rd0s1")]
 position = Vector2(256, 256)
 map = NodePath("../Map")
+
+[node name="ScreenSpaceTextures" type="CanvasLayer" parent="."]
+
+[node name="DrawPile" parent="ScreenSpaceTextures" instance=ExtResource("3_c0vcs")]
+position = Vector2(1177, 621)
+scale = Vector2(0.3, 0.3)
+
+[node name="UI" type="Control" parent="ScreenSpaceTextures"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HSlider" type="HSlider" parent="ScreenSpaceTextures/UI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 23.0
+offset_top = -49.0
+offset_right = 405.0
+grow_vertical = 0
+min_value = 1.0
+max_value = 4.0
+value = 2.0
+
+[connection signal="value_changed" from="ScreenSpaceTextures/UI/HSlider" to="Map" method="change_floor"]

@@ -14,12 +14,34 @@ const ROOF = 8
 
 var active_floor_map: FloorMap
 var active_floor := GROUND
+#var _active_floor_index := 1
+var _floors: Array[FloorMap]
 
+@onready var basement: FloorMap = %Basement
 @onready var ground_floor: FloorMap = %GroundFloor
+@onready var upper_floor: FloorMap = %UpperFloor
+@onready var roof: FloorMap = %Roof
 
 
 func _ready() -> void:
 	active_floor_map = ground_floor
+	_floors = [
+		basement,
+		ground_floor,
+		upper_floor,
+		roof,
+	]
+
+
+func change_floor(new_floor_raw: float) -> void:
+	var new_floor = int(new_floor_raw) - 1
+	print(new_floor)
+	for map_floor in _floors:
+		map_floor.visible = false
+	#_active_floor_index = new_floor
+	active_floor_map = _floors[new_floor]
+	active_floor = active_floor_map.map_floor
+	active_floor_map.visible = true
 
 
 func place_tile(map_coords: Vector2i, tile_id: Vector2i, rotations := 0) -> void:
@@ -46,8 +68,18 @@ func get_tile_info(map_coords: Vector2i) -> Dictionary:
 	return active_floor_map.get_tile_info(map_coords)
 
 
-func get_neighbors(map_coords: Vector2i, include_empty := true) -> Dictionary:
-	return active_floor_map.get_neighbors(map_coords, include_empty)
+func get_neighbors(map_coords: Vector2i, tile_floor := -1) -> Dictionary:
+	match tile_floor:
+		BASEMENT:
+			return basement.get_neighbors(map_coords)
+		GROUND:
+			return ground_floor.get_neighbors(map_coords)
+		UPPER:
+			return upper_floor.get_neighbors(map_coords)
+		ROOF:
+			return roof.get_neighbors(map_coords)
+	
+	return active_floor_map.get_neighbors(map_coords)
 
 
 func get_door_legality(tile_position: Vector2i, tile_id: Vector2i, rotations := 0) -> DoorLegality:

@@ -1,12 +1,21 @@
-[gd_scene load_steps=5 format=3 uid="uid://b3li0n2vtf1h"]
+[gd_scene load_steps=6 format=3 uid="uid://b3li0n2vtf1h"]
 
 [ext_resource type="Script" path="res://scenes/map/map.gd" id="1_oru6m"]
 [ext_resource type="TileSet" uid="uid://bleoomwkd36ey" path="res://scenes/map/tiles.tres" id="2_2y7do"]
+[ext_resource type="Script" path="res://scenes/map/floors/floor_map.gd" id="3_3ogao"]
 [ext_resource type="Script" path="res://scenes/map/floors/ground_floor_map.gd" id="3_6l03w"]
 [ext_resource type="Texture2D" uid="uid://ekyqhkxp4t6" path="res://assets/tiles/tile_foyer.png" id="4_cr6kk"]
 
 [node name="Map" type="Node2D"]
 script = ExtResource("1_oru6m")
+
+[node name="Basement" type="TileMap" parent="."]
+unique_name_in_owner = true
+visible = false
+tile_set = ExtResource("2_2y7do")
+format = 2
+layer_0/tile_data = PackedInt32Array(0, 131072, 0)
+script = ExtResource("3_3ogao")
 
 [node name="GroundFloor" type="TileMap" parent="."]
 unique_name_in_owner = true
@@ -14,9 +23,28 @@ tile_set = ExtResource("2_2y7do")
 format = 2
 layer_0/tile_data = PackedInt32Array(65534, 1, 0, 65535, 65537, 0, 0, 131073, 0)
 script = ExtResource("3_6l03w")
+map_floor = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="GroundFloor"]
 position = Vector2(550, 256)
 texture = ExtResource("4_cr6kk")
 region_enabled = true
 region_rect = Rect2(1536, 0, 77, 512)
+
+[node name="UpperFloor" type="TileMap" parent="."]
+unique_name_in_owner = true
+visible = false
+tile_set = ExtResource("2_2y7do")
+format = 2
+layer_0/tile_data = PackedInt32Array(0, 65536, 0)
+script = ExtResource("3_3ogao")
+map_floor = 4
+
+[node name="Roof" type="TileMap" parent="."]
+unique_name_in_owner = true
+visible = false
+tile_set = ExtResource("2_2y7do")
+format = 2
+layer_0/tile_data = PackedInt32Array(0, 0, 0)
+script = ExtResource("3_3ogao")
+map_floor = 8

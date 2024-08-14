@@ -5,7 +5,7 @@ const ROTATION_90 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource
 const ROTATION_180 := TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
 const ROTATION_270 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V
 
-@export_enum("Basement:1", "Ground:2", "Upper:4", "Roof:8") var map_floor: int
+@export_enum("Basement:%s" % Map.BASEMENT, "Ground:%s" % Map.GROUND, "Upper:%s" % Map.UPPER, "Roof:%s" % Map.ROOF) var map_floor: int = Map.BASEMENT
 
 var _map = {}
 
@@ -15,7 +15,12 @@ func _ready() -> void:
 
 
 func _place_landing() -> void:
-	pass
+	# Register Landing tile
+	var landing_name = "%s Landing" % (
+			"Basement" if map_floor == Map.BASEMENT
+			else "Upper" if map_floor == Map.UPPER
+			else "Roof")
+	place_tile(Vector2i.ZERO, TileManager.get_tile_info_from_name(landing_name))
 
 
 func get_tile_info(tile_position: Vector2i) -> Dictionary:

@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://ekyqhkxp4t6" path="res://assets/tiles/tile_foyer.png" id="4_cr6kk"]
 [ext_resource type="PackedScene" uid="uid://c1lowmu6vy8k7" path="res://scenes/explorer/explorer.tscn" id="6_mc6bi"]
 
-[node name="Map" type="Node2D"]
+[node name="Map" type="Node2D" groups=["map"]]
 script = ExtResource("1_oru6m")
 
 [node name="Basement" type="TileMap" parent="."]

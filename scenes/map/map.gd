@@ -17,7 +17,7 @@ var active_floor := GROUND
 var explorers_on_floor: Array[Explorer] :
 		get: return active_floor_map.explorers
 var _existing_tiles: Dictionary
-var _floors: Array[FloorMap]
+var _floors: Array[int]
 
 @onready var basement: FloorMap = %Basement
 @onready var ground_floor: FloorMap = %GroundFloor
@@ -28,10 +28,10 @@ var _floors: Array[FloorMap]
 func _ready() -> void:
 	active_floor_map = ground_floor
 	_floors = [
-		basement,
-		ground_floor,
-		upper_floor,
-		roof,
+		BASEMENT,
+		GROUND,
+		UPPER,
+		ROOF,
 	]
 	basement.tile_placed.connect(_on_floor_tile_placed)
 	ground_floor.tile_placed.connect(_on_floor_tile_placed)
@@ -43,12 +43,15 @@ func _ready() -> void:
 	roof.place_landing()
 
 
-func change_floor(new_floor_raw: float) -> void:
+func change_floor_slider(new_floor_raw: float) -> void:
 	var new_floor = int(new_floor_raw) - 1
-	for map_floor in _floors:
-		map_floor.visible = false
-	active_floor_map = _floors[new_floor]
-	active_floor = active_floor_map.map_floor
+	change_floor(_floors[new_floor])
+
+
+func change_floor(new_floor: int) -> void:
+	active_floor_map.visible = false
+	active_floor_map = _get_floor(new_floor)
+	active_floor = new_floor
 	active_floor_map.visible = true
 
 
@@ -57,6 +60,13 @@ func place_tile(map_coords: Vector2i, tile_id: Vector2i, rotations := 0, tile_fl
 	_get_floor(tile_floor).place_tile(map_coords,
 			tile_info,
 			rotations)
+
+
+func move_character_to(character: Explorer, tile_position: Vector2i, tile_floor: int) -> void:
+	character.reparent(_get_floor(tile_floor))
+	character.global_position = get_tile_position_from_coords(tile_position, tile_floor)
+	character.current_floor = tile_floor
+	change_floor(tile_floor)
 
 
 func tile_exists(tile_name: String) -> bool:

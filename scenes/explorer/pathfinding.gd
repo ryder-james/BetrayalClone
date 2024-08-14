@@ -14,8 +14,8 @@ var _path: Array[PathNode] = []
 var _target_queue: Array[Vector3i]
 var _active_target: Vector3i
 var _has_active_target := false
-var _next_point: Vector2
-var _current_point: Vector2
+var _next_point: PathNode
+var _current_point: PathNode
 var _is_traveling := false
 
 @onready var explorer: Explorer = $".."
@@ -37,20 +37,26 @@ func _process(delta: float) -> void:
 	if _has_active_target and not _is_traveling and _path.size() > 0:
 		_is_traveling = true
 		var next_node = _path.pop_front()
-		_next_point = map.get_tile_position_from_coords(next_node.position, next_node.map_floor)
+		_next_point = next_node#map.get_tile_position_from_coords(next_node.position, next_node.map_floor)
 	
 	if _is_traveling:
 		on_start_moving.emit()
-		explorer.global_position = explorer.global_position.lerp(_next_point, delta * _speed)
-		if (_next_point - explorer.global_position).length_squared() <= 750.0:
+		var next_pos = map.get_tile_position_from_coords(_next_point.position, _next_point.map_floor)
+		
+		if _next_point.is_linked:
+			map.move_character_to(explorer, _next_point.position, _next_point.map_floor)
+		else:
+			explorer.global_position = explorer.global_position.lerp(next_pos, delta * _speed)
+		
+		if (next_pos - explorer.global_position).length_squared() <= 750.0:
 			_is_traveling = false
 			_current_point = _next_point
-			_next_point = Vector2.ZERO
+			_next_point = null
 			_recalculate_path_internal(_active_target)
 			_path.pop_front()
 			if _path.size() == 0:
 				on_target_reached.emit()
-				explorer.global_position = _current_point
+				explorer.global_position = next_pos
 				_has_active_target = false
 
 
@@ -150,6 +156,7 @@ func _recalculate_path_internal(target_id: Vector3i) -> void:
 			child.doors = link.doors
 			child.parent_id = current.pos_id
 			child.has_parent = true
+			child.is_linked = true
 			
 			all_nodes[child.pos_id] = child
 			current.child_ids.append(child.pos_id)
@@ -189,6 +196,7 @@ class PathNode:
 	var doors: int = Direction.NONE
 	var parent_id: Vector3i
 	var has_parent: bool = false
+	var is_linked: bool = false
 	var child_ids: Array[Vector3i] = []
 	var weight: int
 	var heuristic: int

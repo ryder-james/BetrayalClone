@@ -54,4 +54,4 @@ min_value = 1.0
 max_value = 4.0
 value = 2.0
 
-[connection signal="value_changed" from="ScreenSpaceTextures/UI/HSlider" to="Map" method="change_floor"]
+[connection signal="value_changed" from="ScreenSpaceTextures/UI/HSlider" to="Map" method="change_floor_slider"]

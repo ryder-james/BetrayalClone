@@ -2,16 +2,19 @@ extends Node
 # Autoload as Direction
 
 const NONE := 0
+
 const UP := 1
 const RIGHT := 2
 const DOWN := 4
 const LEFT := 8
 
+const ALL = UP | RIGHT | DOWN | LEFT
+
 
 func rotate_c(direction: int) -> int:
 	var new_dir = direction << 1
-	while new_dir > 15:
-		new_dir -= 15
+	while new_dir > ALL:
+		new_dir -= ALL
 	return new_dir
 
 

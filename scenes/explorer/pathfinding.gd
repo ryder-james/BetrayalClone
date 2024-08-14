@@ -40,15 +40,16 @@ func _process(delta: float) -> void:
 		_next_point = next_node#map.get_tile_position_from_coords(next_node.position, next_node.map_floor)
 	
 	if _is_traveling:
-		on_start_moving.emit()
+		on_start_moving.emit(get_travel_path())
 		var next_pos = map.get_tile_position_from_coords(_next_point.position, _next_point.map_floor)
-		
+
 		if _next_point.is_linked:
 			map.move_character_to(explorer, _next_point.position, _next_point.map_floor)
 		else:
 			explorer.global_position = explorer.global_position.lerp(next_pos, delta * _speed)
 		
 		if (next_pos - explorer.global_position).length_squared() <= 750.0:
+			on_stop_moving.emit()
 			_is_traveling = false
 			_current_point = _next_point
 			_next_point = null
@@ -60,10 +61,20 @@ func _process(delta: float) -> void:
 				_has_active_target = false
 
 
-func get_travel_path() -> Array[Vector2i]:
+func get_full_path() -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
 	for node in _path:
 		path.append(node.position)
+	return path
+
+
+func get_travel_path() -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	if (_next_point):
+		path.append(_next_point.position)
+	for node in _path:
+		if node.map_floor == map.active_floor:
+			path.append(node.position)
 	return path
 
 

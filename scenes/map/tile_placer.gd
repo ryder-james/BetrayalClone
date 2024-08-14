@@ -29,6 +29,7 @@ var legal_rotations = []
 var placement_rotations := 0
 var tile_mode := TileMode.SELECT
 var active_explorer: Explorer
+var process := true
 
 @onready var preview: Node2D = $Preview
 @onready var highlighter: ColorRect = %Highlighter
@@ -38,6 +39,9 @@ var active_explorer: Explorer
 func _ready() -> void:
 	active_explorer = get_tree().get_first_node_in_group("explorer") as Explorer
 	active_tile_coords = map.get_tile_coords(get_global_mouse_position())
+	active_explorer.pathfinder.on_target_reached.connect(
+		func(): process = true
+	)
 	_update_highlighter()
 
 
@@ -50,7 +54,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process_input_select(event: InputEvent) -> void:
-	if event.is_action_pressed("primary"):
+	if process and event.is_action_pressed("primary"):
 		_update_highlighter()
 		if can_place:
 			var action = _get_tile_action(draw_pile.peek(), active_tile_coords)
@@ -59,6 +63,7 @@ func _process_input_select(event: InputEvent) -> void:
 				action = _get_tile_action(draw_pile.peek(), active_tile_coords)
 			_switch_mode(TileMode.DISCOVER)
 		elif active_tile_id != DrawPile.NO_TILE:
+			process = false
 			Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	elif event is InputEventMouseMotion:
 		prev_tile_coords = active_tile_coords
@@ -72,7 +77,7 @@ func _process_input_select(event: InputEvent) -> void:
 
 
 func _process_input_discover(event: InputEvent) -> void:
-	if event.is_action_pressed("primary"):
+	if process and event.is_action_pressed("primary"):
 		if can_place:
 			_place_tile()
 			_switch_mode(TileMode.SELECT)
@@ -98,7 +103,7 @@ func _switch_mode(new_mode: TileMode) -> void:
 			tile_preview.texture = TileManager.get_tile_texture(active_tile_id)
 			
 			active_explorer.recalculate_path(active_tile_coords)
-			var path = active_explorer.get_travel_path()
+			var path = active_explorer.get_full_path()
 			var entering_direction = Direction.get_direction(path[-2], active_tile_coords)
 
 			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id, entering_direction)
@@ -113,6 +118,7 @@ func _switch_mode(new_mode: TileMode) -> void:
 
 func _place_tile() -> void:
 	map.place_tile(active_tile_coords, active_tile_id, placement_rotations)
+	process = false
 	Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	if draw_pile.is_empty():
 		draw_pile.refill()

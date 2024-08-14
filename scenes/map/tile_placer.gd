@@ -59,7 +59,7 @@ func _process_input_select(event: InputEvent) -> void:
 				action = _get_tile_action(draw_pile.peek(), active_tile_coords)
 			_switch_mode(TileMode.DISCOVER)
 		elif active_tile_id != DrawPile.NO_TILE:
-			Event.on_target_updated.emit(active_tile_coords)
+			Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	elif event is InputEventMouseMotion:
 		prev_tile_coords = active_tile_coords
 		active_tile_coords = map.get_tile_coords(get_global_mouse_position())
@@ -97,13 +97,12 @@ func _switch_mode(new_mode: TileMode) -> void:
 			tile_preview.visible = true
 			tile_preview.texture = TileManager.get_tile_texture(active_tile_id)
 			
-			var path = active_explorer.calculate_path(active_tile_coords)
+			active_explorer.recalculate_path(active_tile_coords)
+			var path = active_explorer.get_travel_path()
 			var entering_direction = Direction.get_direction(path[-2], active_tile_coords)
 
 			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id, entering_direction)
 			placement_rotations = legal_rotations[0]
-			
-			Event.on_target_updated.emit(active_explorer.calculate_path(active_tile_coords)[-2])
 			
 			_update_discover_visual()
 
@@ -114,6 +113,7 @@ func _switch_mode(new_mode: TileMode) -> void:
 
 func _place_tile() -> void:
 	map.place_tile(active_tile_coords, active_tile_id, placement_rotations)
+	Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	if draw_pile.is_empty():
 		draw_pile.refill()
 
@@ -133,19 +133,19 @@ func _update_highlighter() -> void:
 		TileAction.MOVE_TO:
 			highlighter.color = move_to_color
 			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
-				var path = active_explorer.calculate_path(active_tile_coords)
-				active_explorer.draw_path(path)
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 		TileAction.WRONG_FLOOR:
 			highlighter.color = discover_color
 			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
-				var path = active_explorer.calculate_path(active_tile_coords)
-				active_explorer.draw_path(path)
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 			can_place = true
 		TileAction.DISCOVER:
 			highlighter.color = discover_color
 			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
-				var path = active_explorer.calculate_path(active_tile_coords)
-				active_explorer.draw_path(path)
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 			can_place = true
 
 

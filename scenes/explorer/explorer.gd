@@ -5,8 +5,10 @@ extends Node2D
 
 var current_floor = Map.GROUND
 var _speed := 3.5
-var _path = []
-var _target_queue: Array
+var _path: Array[PathNode] = []
+var _target_queue: Array[Vector3i]
+var _active_target: Vector3i
+var _has_active_target := false
 var _next_point: Vector2
 var _current_point: Vector2
 var _path_line: Line2D
@@ -19,26 +21,33 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _path.size() == 0 and _target_queue.size() > 0:
-		_path = calculate_path(_target_queue.pop_back())
+	if not _has_active_target and _target_queue.size() > 0:
+		_active_target = _target_queue.pop_back()
+		_has_active_target = true
+		_recalculate_path_internal(_active_target)
+		_path.pop_front()
 
-	if not _is_traveling and _path.size() > 0:
+	if _has_active_target and not _is_traveling and _path.size() > 0:
 		_is_traveling = true
-		_next_point = map.get_tile_position_from_coords(_path.pop_front())
+		var next_node = _path.pop_front()
+		_next_point = map.get_tile_position_from_coords(next_node.position, next_node.map_floor)
 	
 	if _is_traveling:
-		draw_path(_path)
+		draw_path()
 		global_position = global_position.lerp(_next_point, delta * _speed)
 		if (_next_point - global_position).length_squared() <= 750.0:
 			_is_traveling = false
 			_current_point = _next_point
 			_next_point = Vector2.ZERO
+			_recalculate_path_internal(_active_target)
+			_path.pop_front()
 			if _path.size() == 0:
 				_path_line.clear_points()
 				global_position = _current_point
+				_has_active_target = false
 
 
-func draw_path(path: Array) -> void:
+func draw_path() -> void:
 	if not _path_line:
 		return
 	
@@ -46,8 +55,8 @@ func draw_path(path: Array) -> void:
 	if _is_traveling:
 		_path_line.add_point(global_position)
 		_path_line.add_point(_next_point)
-	for point in path:
-		_path_line.add_point(map.get_tile_position_from_coords(point))
+	for node in _path:
+		_path_line.add_point(map.get_tile_position_from_coords(node.position))
 
 
 func hide_path() -> void:
@@ -55,12 +64,24 @@ func hide_path() -> void:
 		_path_line.clear_points()
 
 
-func calculate_path(target: Vector2i, target_floor := -1) -> Array[Vector2i]:
-	var start: Vector2i = map.get_tile_coords(global_position)
-	if target_floor < 0:
-		target_floor = map.active_floor
+func get_travel_path() -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	for node in _path:
+		path.append(node.position)
+	return path
 
-	var target_id := Vector3i(target.x, target.y, target_floor)
+
+func recalculate_path(target: Vector2i, target_floor := -1) -> void:
+	if _has_active_target:
+		print("already has path")
+		return
+	if target_floor < Map.BASEMENT:
+		target_floor = current_floor
+	_recalculate_path_internal(Vector3i(target.x, target.y, target_floor))
+	
+
+func _recalculate_path_internal(target_id: Vector3i) -> void:
+	var start: Vector2i = map.get_tile_coords(global_position)
 
 	var open: Dictionary = {}
 	var closed: Dictionary = {}
@@ -81,7 +102,7 @@ func calculate_path(target: Vector2i, target_floor := -1) -> Array[Vector2i]:
 	
 	while open.keys().size() > 0:
 		# Arbitrarily high number
-		var lowest_f := 60.0
+		var lowest_f := 6000.0
 		var current: PathNode
 		for node in open.values():
 			if node.f < lowest_f:
@@ -90,18 +111,19 @@ func calculate_path(target: Vector2i, target_floor := -1) -> Array[Vector2i]:
 		open.erase(current.pos_id)
 		closed[current.pos_id] = current
 		
-		if current.position == target and current.map_floor == target_floor:
-			var path: Array[Vector2i] = []
+		if current.pos_id == target_id:
+			var path: Array[PathNode] = []
 			var path_point: PathNode = current
 			while path_point:
 				# TODO: This will be broken when moving between floors.
-				path.append(path_point.position)
+				path.append(path_point)
 				if path_point.has_parent:
 					path_point = closed[path_point.parent_id]
 				else:
 					path_point = null
 			path.reverse()
-			return path
+			_path = path
+			return
 		
 		var neighbors = map.get_neighbors(current.position, current.map_floor)
 		for direction in neighbors:
@@ -158,11 +180,12 @@ func calculate_path(target: Vector2i, target_floor := -1) -> Array[Vector2i]:
 			
 			open[child_id] = all_nodes[child_id]
 	
-	return [ first_node.position ]
+	_path = [ first_node ]
 
 
-func _on_target_updated(new_target: Vector2i) -> void:
-	_target_queue.push_front(new_target)
+func _on_target_updated(new_target: Vector2i, map_floor: int) -> void:
+	var target = Vector3i(new_target.x, new_target.y, map_floor)
+	_target_queue.push_front(target)
 
 
 class PathNode:

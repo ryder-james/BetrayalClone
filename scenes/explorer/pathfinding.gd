@@ -155,6 +155,7 @@ func _recalculate_path_internal(target_id: Vector3i) -> void:
 			child.doors = doors
 			child.parent_id = current.pos_id
 			child.has_parent = true
+			child.weight = 1
 			
 			all_nodes[child.pos_id] = child
 			current.child_ids.append(child.pos_id)
@@ -168,6 +169,7 @@ func _recalculate_path_internal(target_id: Vector3i) -> void:
 			child.parent_id = current.pos_id
 			child.has_parent = true
 			child.is_linked = true
+			child.weight = link.weight
 			
 			all_nodes[child.pos_id] = child
 			current.child_ids.append(child.pos_id)
@@ -177,7 +179,7 @@ func _recalculate_path_internal(target_id: Vector3i) -> void:
 				continue
 			
 			# TODO: Sub 1 for node weight (enemy team or w/e)
-			all_nodes[child_id].weight = current.weight + 1
+			all_nodes[child_id].weight += current.weight
 			all_nodes[child_id].heuristic = (target_id - child_id).length_squared()
 			all_nodes[child_id].f = all_nodes[child_id].weight + all_nodes[child_id].heuristic
 			

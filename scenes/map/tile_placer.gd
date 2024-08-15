@@ -14,7 +14,6 @@ enum TileMode {
 
 @export var draw_pile: DrawPile
 @export var map: Map
-@export var explorer: Explorer
 @export_group("Highlighter Colors")
 @export var no_action_color: Color = Color.TRANSPARENT
 @export var move_to_color: Color = Color(0xffffff96)
@@ -29,6 +28,8 @@ var active_tile_id: Vector2i
 var legal_rotations = []
 var placement_rotations := 0
 var tile_mode := TileMode.SELECT
+var active_explorer: Explorer
+var process := true
 
 @onready var preview: Node2D = $Preview
 @onready var highlighter: ColorRect = %Highlighter
@@ -36,11 +37,15 @@ var tile_mode := TileMode.SELECT
 
 
 func _ready() -> void:
+	active_explorer = get_tree().get_first_node_in_group("explorer") as Explorer
 	active_tile_coords = map.get_tile_coords(get_global_mouse_position())
+	active_explorer.pathfinder.on_target_reached.connect(
+		func(): process = true
+	)
 	_update_highlighter()
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	match tile_mode:
 		TileMode.SELECT:
 			_process_input_select(event)
@@ -49,7 +54,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _process_input_select(event: InputEvent) -> void:
-	if event.is_action_pressed("primary"):
+	if process and event.is_action_pressed("primary"):
 		_update_highlighter()
 		if can_place:
 			var action = _get_tile_action(draw_pile.peek(), active_tile_coords)
@@ -58,13 +63,12 @@ func _process_input_select(event: InputEvent) -> void:
 				action = _get_tile_action(draw_pile.peek(), active_tile_coords)
 			_switch_mode(TileMode.DISCOVER)
 		elif active_tile_id != DrawPile.NO_TILE:
-			Event.on_target_updated.emit(active_tile_coords)
-	elif event.is_action_pressed("secondary"):
-		_update_highlighter()
+			process = false
+			Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	elif event is InputEventMouseMotion:
 		prev_tile_coords = active_tile_coords
 		active_tile_coords = map.get_tile_coords(get_global_mouse_position())
-		var active_tile = map.get_tile_info(active_tile_coords)
+		var active_tile = map.get_tile(active_tile_coords)
 		if active_tile:
 			active_tile_id = active_tile.id
 		else:
@@ -73,7 +77,7 @@ func _process_input_select(event: InputEvent) -> void:
 
 
 func _process_input_discover(event: InputEvent) -> void:
-	if event.is_action_pressed("primary"):
+	if process and event.is_action_pressed("primary"):
 		if can_place:
 			_place_tile()
 			_switch_mode(TileMode.SELECT)
@@ -98,19 +102,24 @@ func _switch_mode(new_mode: TileMode) -> void:
 			tile_preview.visible = true
 			tile_preview.texture = TileManager.get_tile_texture(active_tile_id)
 			
-			var path = explorer.calculate_path(active_tile_coords)
+			active_explorer.recalculate_path(active_tile_coords)
+			var path = active_explorer.get_full_path()
 			var entering_direction = Direction.get_direction(path[-2], active_tile_coords)
 
 			legal_rotations = map.get_legal_rotations(active_tile_coords, active_tile_id, entering_direction)
 			placement_rotations = legal_rotations[0]
 			
-			Event.on_target_updated.emit(explorer.calculate_path(active_tile_coords)[-2])
-			
 			_update_discover_visual()
+
+			if legal_rotations.size() == 1:
+				_place_tile()
+				_switch_mode(TileMode.SELECT)
 
 
 func _place_tile() -> void:
 	map.place_tile(active_tile_coords, active_tile_id, placement_rotations)
+	process = false
+	Event.on_target_updated.emit(active_tile_coords, map.active_floor)
 	if draw_pile.is_empty():
 		draw_pile.refill()
 
@@ -125,23 +134,24 @@ func _update_highlighter() -> void:
 	match tile_action:
 		TileAction.NONE:
 			highlighter.color = no_action_color
-			explorer.hide_path()
+			if active_explorer.current_floor == map.active_floor:
+				active_explorer.hide_path()
 		TileAction.MOVE_TO:
 			highlighter.color = move_to_color
-			if prev_tile_coords != active_tile_coords:
-				var path = explorer.calculate_path(active_tile_coords)
-				explorer.draw_path(path)
+			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 		TileAction.WRONG_FLOOR:
 			highlighter.color = discover_color
-			if prev_tile_coords != active_tile_coords:
-				var path = explorer.calculate_path(active_tile_coords)
-				explorer.draw_path(path)
+			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 			can_place = true
 		TileAction.DISCOVER:
 			highlighter.color = discover_color
-			if prev_tile_coords != active_tile_coords:
-				var path = explorer.calculate_path(active_tile_coords)
-				explorer.draw_path(path)
+			if prev_tile_coords != active_tile_coords and active_explorer.current_floor == map.active_floor:
+				active_explorer.recalculate_path(active_tile_coords)
+				active_explorer.draw_path()
 			can_place = true
 
 

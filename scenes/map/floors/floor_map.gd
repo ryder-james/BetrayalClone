@@ -1,34 +1,41 @@
 class_name FloorMap
 extends TileMap
 
-const TILE_SIZE = 512
-const TILES_SOURCE_ID := 0
-const FOYER_SOURCE_ID := 1
+signal tile_placed(tile: Map.Tile)
+
 const ROTATION_90 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H
 const ROTATION_180 := TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
 const ROTATION_270 := TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V
 
-@export_enum("Basement:1", "Ground:2", "Upper:4", "Roof:8") var map_floor: int
+@export_enum("Basement:%s" % Map.BASEMENT, "Ground:%s" % Map.GROUND, "Upper:%s" % Map.UPPER, "Roof:%s" % Map.ROOF) var map_floor: int = Map.BASEMENT
+
+var explorers: Array[Explorer] = []
 var _map = {}
-var _top_left_tile_coords: Vector2i
-var _bot_right_tile_coords: Vector2i
 
 
 func _ready() -> void:
-	# Register Foyer tile
-	place_tile(Vector2i.ZERO, TileManager.get_tile_info_from_name("Entrance Hall"))
-	place_tile(Vector2i(-1, 0), TileManager.get_tile_info_from_name("Foyer"))
-	place_tile(Vector2i(-2, 0), TileManager.get_tile_info_from_name("Grand Staircase"))
+	for node in get_tree().get_nodes_in_group("explorer"):
+		if get_children().has(node):
+			explorers.append(node as Explorer)
 
 
-func get_tile_info(tile_position: Vector2i) -> Dictionary:
+func place_landing() -> void:
+	# Register Landing tile
+	var landing_name = "%s Landing" % (
+			"Basement" if map_floor == Map.BASEMENT
+			else "Upper" if map_floor == Map.UPPER
+			else "Roof")
+	place_tile(Vector2i.ZERO, TileManager.get_tile_info_from_name(landing_name))
+
+
+func get_tile(tile_position: Vector2i) -> Map.Tile:
 	if _map.has(tile_position):
 		return _map[tile_position]
 	
-	return {}
+	return null
 
 
-func get_legal_rotations(tile_position: Vector2i, tile_info: Dictionary, origin_direction: int) -> Array:
+func get_legal_rotations(tile_position: Vector2i, tile_info: TileInfo, origin_direction: int) -> Array:
 	# Prioritize first connecting to at least the door we started from,
 	#   then to maximizing remaining open doors.
 	
@@ -56,19 +63,19 @@ func get_legal_rotations(tile_position: Vector2i, tile_info: Dictionary, origin_
 	return best_placements
 
 
-func place_tile(tile_position: Vector2i, tile_info: Dictionary, rotations := 0) -> void:
+func place_tile(tile_position: Vector2i, tile_info: TileInfo, rotations := 0) -> void:
 	var rotated_doors = tile_info.doors
 	for n in rotations:
 		rotated_doors = Direction.rotate_c(rotated_doors)
 	
-	var map_obj = {
-		name = tile_info.name,
-		doors = rotated_doors,
-		tile_position = tile_position,
-		id = tile_info.id,
-		rotations = rotations,
-	}
-	_map[tile_position] = map_obj
+	var map_tile = Map.Tile.new()
+	map_tile.name = tile_info.name
+	map_tile.doors = rotated_doors
+	map_tile.position = tile_position
+	map_tile.map_floor = map_floor
+	map_tile.id = tile_info.id
+	map_tile.rotations = rotations
+	_map[tile_position] = map_tile
 	
 	var rotation_flags = 0
 	if rotations == 1:
@@ -78,24 +85,11 @@ func place_tile(tile_position: Vector2i, tile_info: Dictionary, rotations := 0) 
 	elif rotations == 3:
 		rotation_flags = ROTATION_270
 	
-	if (tile_position.x < _top_left_tile_coords.x 
-			or tile_position.y < _top_left_tile_coords.y):
-		var min_x = min(tile_position.x, _top_left_tile_coords.x)
-		var min_y = min(tile_position.y, _top_left_tile_coords.y)
-		_top_left_tile_coords = Vector2i(min_x, min_y)
-	if (tile_position.x > _bot_right_tile_coords.x 
-			or tile_position.y > _bot_right_tile_coords.y):
-		var max_x = max(tile_position.x, _bot_right_tile_coords.x)
-		var max_y = max(tile_position.y, _bot_right_tile_coords.y)
-		_bot_right_tile_coords = Vector2i(max_x, max_y)
-	
 	set_cell(0, tile_position, tile_info.source, tile_info.id, rotation_flags)
+	tile_placed.emit(map_tile)
 
 
 func get_door_legality(tile_position: Vector2i, doors: int, rotations := 0) -> Map.DoorLegality:
-	if tile_position == Vector2i(1, 0):
-		return Map.DoorLegality.ILLEGAL
-	
 	for rot_count in rotations:
 		doors = Direction.rotate_c(doors)
 	
@@ -153,38 +147,42 @@ func get_unblocked_doors(tile_position: Vector2i, doors: int, rotation_count := 
 	return unblocked_count
 
 
-func has_door_facing(tile_info: Dictionary, direction: int, rotations := 0) -> bool:
+func has_door_facing(tile_info: TileInfo, direction: int, rotations := 0) -> bool:
 	var rotated_doors = tile_info.doors
 	for n in rotations:
 		rotated_doors = Direction.rotate_c(rotated_doors)
 	return rotated_doors & direction == direction
 
 
+func get_linked_tiles(map_coords: Vector2i) -> Array[Dictionary]:
+	var tile = get_tile(map_coords)
+	if not tile:
+		return []
+	return TileManager.get_linked_tiles(get_tile(map_coords).name)
+
+
 func get_neighbors(map_coords: Vector2i, include_empty := true) -> Dictionary:
 	var neighbors = {}
-	neighbors[Direction.NONE] = get_tile_info(map_coords)
+	neighbors[Direction.NONE] = get_tile(map_coords)
 	
-	var up = map_coords + Vector2i.UP
-	var right = map_coords + Vector2i.RIGHT
-	var down = map_coords + Vector2i.DOWN
-	var left = map_coords + Vector2i.LEFT
+	var up = get_tile(map_coords + Vector2i.UP)
+	var right = get_tile(map_coords + Vector2i.RIGHT)
+	var down = get_tile(map_coords + Vector2i.DOWN)
+	var left = get_tile(map_coords + Vector2i.LEFT)
 	
 	if include_empty:
-		neighbors[Direction.UP] = get_tile_info(up)
-		neighbors[Direction.RIGHT] = get_tile_info(right)
-		neighbors[Direction.DOWN] = get_tile_info(down)
-		neighbors[Direction.LEFT] = get_tile_info(left)
+		neighbors[Direction.UP] = up
+		neighbors[Direction.RIGHT] = right
+		neighbors[Direction.DOWN] = down
+		neighbors[Direction.LEFT] = left
 	else:
-		if get_tile_info(up):
-			neighbors[Direction.UP] = get_tile_info(up)
-		if get_tile_info(right):
-			neighbors[Direction.RIGHT] = get_tile_info(right)
-		if get_tile_info(down):
-			neighbors[Direction.DOWN] = get_tile_info(down)
-		if get_tile_info(left):
-			neighbors[Direction.LEFT] = get_tile_info(left)
+		if up:
+			neighbors[Direction.UP] = up
+		if right:
+			neighbors[Direction.RIGHT] = right
+		if down:
+			neighbors[Direction.DOWN] = down
+		if left:
+			neighbors[Direction.LEFT] = left
 	
 	return neighbors
-
-
-

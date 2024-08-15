@@ -1,60 +1,59 @@
 extends Node
 # Autoload as TileManager
 
+const TILE_SIZE = 512
 const TILES = preload("res://scenes/map/tiles.tres") as TileSet
 const TILE_SOURCE_ID = 0
 const FOYER_SOURCE_ID = 1
 const DOOR_BIT := 0
 
-#region Foyer Tiles
-const ENTRANCE_HALL = {
-	name = "Entrance Hall",
-	doors = Direction.UP | Direction.DOWN | Direction.LEFT,
-	id = Vector2i(2, 0),
-	source = FOYER_SOURCE_ID,
-}
-const FOYER = {
-	name = "Foyer",
-	doors = Direction.UP | Direction.RIGHT | Direction.DOWN | Direction.LEFT,
-	id = Vector2i(1, 0),
-	source = FOYER_SOURCE_ID,
-}
-const GRAND_STAIRCASE = {
-	name = "Grand Staircase",
-	doors = Direction.RIGHT,
-	id = Vector2i.ZERO,
-	source = FOYER_SOURCE_ID,
-}
-#endregion
-
 var _tile_name_cache: Dictionary = {}
-var _tile_data_cache: Dictionary = {}
+var _tile_cache: Dictionary = {}
 var _tile_atlas: TileSetAtlasSource
+var _foyer_atlas: TileSetAtlasSource
 
 
 func _ready() -> void:
-	_tile_atlas = TILES.get_source(0) as TileSetAtlasSource
+	_tile_atlas = TILES.get_source(TILE_SOURCE_ID) as TileSetAtlasSource
+	_foyer_atlas = TILES.get_source(FOYER_SOURCE_ID) as TileSetAtlasSource
 
 
-func get_tile_info_from_name(tile_name: String) -> Dictionary:
-	var foyer_tile = _get_foyer_tile(tile_name)
-	if foyer_tile:
-		return foyer_tile
-	
+func get_tile_info_from_name(tile_name: String) -> TileInfo:
 	if _tile_name_cache.has(tile_name):
-		return _get_tile_info(_tile_name_cache[tile_name])
+		return _get_tile_data(_tile_name_cache[tile_name]).info
+
+	if (tile_name == "Entrance Hall"
+			or tile_name == "Foyer"
+			or tile_name == "Grand Staircase"):
+		for tile_index in _foyer_atlas.get_tiles_count():
+			var tile_id = _foyer_atlas.get_tile_id(tile_index)
+			var tile_data = _foyer_atlas.get_tile_data(tile_id, 0)
+			if (tile_data.get_custom_data("Name") == tile_name):
+				return _get_tile_data(tile_id, FOYER_SOURCE_ID).info
+	else:
+		for tile_index in _tile_atlas.get_tiles_count():
+			var tile_id = _tile_atlas.get_tile_id(tile_index)
+			var tile_data = _tile_atlas.get_tile_data(tile_id, 0)
+			if (tile_data.get_custom_data("Name") == tile_name):
+				return _get_tile_data(tile_id).info
 	
-	for tile_index in _tile_atlas.get_tiles_count():
-		var tile_id = _tile_atlas.get_tile_id(tile_index)
-		var tile_data = _tile_atlas.get_tile_data(tile_id, 0)
-		if (tile_data.get_custom_data("Name") == tile_name):
-			return _get_tile_info(tile_id)
-	
-	return {}
+	return null
 
 
-func get_tile_info(tile_id: Vector2i) -> Dictionary:
-	return _get_tile_info(tile_id)
+func get_linked_tiles(_tile_name: String) -> Array[Dictionary]:
+	var data = _get_tile_data_from_name(_tile_name)
+	var raw_links = data.get_custom_data("Links")
+	var linked_tiles: Array[Dictionary] = []
+	for link_name in raw_links.keys():
+		linked_tiles.append({
+			name = link_name,
+			weight = raw_links[link_name]
+		})
+	return linked_tiles
+
+
+func get_tile_info(tile_id: Vector2i) -> TileInfo:
+	return _get_tile_data(tile_id).info
 
 
 func get_tile_texture(tile_id: Vector2i) -> Texture2D:
@@ -63,23 +62,42 @@ func get_tile_texture(tile_id: Vector2i) -> Texture2D:
 	tex_subregion.set_region(_tile_atlas.get_runtime_tile_texture_region(tile_id, 0))
 	return tex_subregion
 
-func _get_foyer_tile(tile_name: String) -> Dictionary:
-	match tile_name:
-		"Entrance Hall":
-			return ENTRANCE_HALL
-		"Foyer":
-			return FOYER
-		"Grand Staircase":
-			return GRAND_STAIRCASE
+
+func _get_tile_data_from_name(tile_name: String) -> TileData:
+	if _tile_name_cache.has(tile_name):
+		var internal_id = _tile_name_cache[tile_name]
+		var tile_id = Vector2i(internal_id.x, internal_id.y)
+		var source = internal_id.z
+		return _get_tile_data(tile_id, source).data
+
+	if (tile_name == "Entrance Hall"
+			or tile_name == "Foyer"
+			or tile_name == "Grand Staircase"):
+		for tile_index in _foyer_atlas.get_tiles_count():
+			var tile_id = _foyer_atlas.get_tile_id(tile_index)
+			var tile_data = _foyer_atlas.get_tile_data(tile_id, 0)
+			if (tile_data.get_custom_data("Name") == tile_name):
+				return _get_tile_data(tile_id, FOYER_SOURCE_ID).data
+	else:
+		for tile_index in _tile_atlas.get_tiles_count():
+			var tile_id = _tile_atlas.get_tile_id(tile_index)
+			var tile_data = _tile_atlas.get_tile_data(tile_id, 0)
+			if (tile_data.get_custom_data("Name") == tile_name):
+				return _get_tile_data(tile_id, TILE_SOURCE_ID).data
 	
-	return {}
+	return null
 
 
-func _get_tile_info(tile_id: Vector2i) -> Dictionary:
-	if _tile_data_cache.has(tile_id):
-		return _tile_data_cache[tile_id]
+func _get_tile_data(tile_id: Vector2i, source := TILE_SOURCE_ID) -> Tile:
+	var internal_id = Vector3i(tile_id.x, tile_id.y, source)
+	if _tile_cache.has(internal_id):
+		return _tile_cache[internal_id]
 	
-	var tile_data = _tile_atlas.get_tile_data(tile_id, 0)
+	var tile_data: TileData
+	if source == FOYER_SOURCE_ID:
+		tile_data = _foyer_atlas.get_tile_data(tile_id, 0)
+	else:
+		tile_data = _tile_atlas.get_tile_data(tile_id, 0)
 	
 	var doors = Direction.NONE
 	if tile_data.get_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_SIDE) == DOOR_BIT:
@@ -91,14 +109,23 @@ func _get_tile_info(tile_id: Vector2i) -> Dictionary:
 	if tile_data.get_terrain_peering_bit(TileSet.CELL_NEIGHBOR_LEFT_SIDE) == DOOR_BIT:
 		doors |= Direction.LEFT
 	
-	var tile_obj = {
-		name = tile_data.get_custom_data("Name"),
-		doors = doors,
-		floors = tile_data.get_custom_data("Floor"),
-		id = tile_id,
-		source = TILE_SOURCE_ID,
-	}
+	var tile_info = TileInfo.new()
+	tile_info.name = tile_data.get_custom_data("Name")
+	tile_info.doors = doors
+	tile_info.floors = tile_data.get_custom_data("Floor")
+	tile_info.id = tile_id
+	tile_info.source = source
+
+	var tile = Tile.new()
+	tile.data = tile_data
+	tile.info = tile_info
 	
-	_tile_name_cache[tile_obj.name] = tile_id
-	_tile_data_cache[tile_id] = tile_obj
-	return tile_obj
+	_tile_name_cache[tile_info.name] = internal_id
+	_tile_cache[internal_id] = tile
+
+	return tile
+
+
+class Tile:
+	var data: TileData
+	var info: TileInfo

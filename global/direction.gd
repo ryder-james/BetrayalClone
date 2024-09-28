@@ -1,5 +1,5 @@
 class_name Direction
-extends RefCounted
+extends Object
 
 const NONE := 0
 

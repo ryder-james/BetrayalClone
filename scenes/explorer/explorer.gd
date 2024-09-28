@@ -2,6 +2,7 @@ class_name Explorer
 extends Node2D
 
 @export var map: Map
+@export var card: ExplorerCard
 
 var current_floor: int :
 	get: 

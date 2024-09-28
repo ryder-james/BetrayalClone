@@ -11,7 +11,7 @@ var current_floor: int :
 
 var _path_line: Line2D
 
-@onready var pathfinder: Pathfinder = $Pathfinding
+@onready var pathfinder: Pathfinder = $Pathfinder
 
 
 func _ready() -> void:

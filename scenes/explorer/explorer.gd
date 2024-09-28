@@ -46,6 +46,7 @@ func _draw_travel_path(positions: Array[Vector2i]) -> void:
 	if not _path_line:
 		return
 
+	_path_line.default_color = card.color
 	_path_line.clear_points()
 	_path_line.add_point(global_position)
 	for tile_position in positions:
